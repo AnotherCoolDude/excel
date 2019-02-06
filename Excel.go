@@ -23,12 +23,13 @@ func File(path string, sheetname string) *Excel {
 		sheetIndex := eFile.GetActiveSheetIndex()
 		oldName := eFile.GetSheetName(sheetIndex)
 		eFile.SetSheetName(oldName, sheetname)
-		sheets = append(sheets, Sheet{file: eFile, name: sheetname})
+		sheets = append(sheets, Sheet{file: eFile, name: sheetname, columns: []string{}})
 	} else {
 		eFile, err = excelize.OpenFile(path)
 		sheetMap := eFile.GetSheetMap()
 		for _, name := range sheetMap {
-			sheets = append(sheets, Sheet{file: eFile, name: name})
+			header := eFile.GetRows(name)[0]
+			sheets = append(sheets, Sheet{file: eFile, name: name, columns: header})
 		}
 		if err != nil {
 			fmt.Printf("couldn't open file at path\n%s\nerr: %s", path, err)

@@ -11,13 +11,14 @@ import (
 
 // Sheet wraps the sheets of a excel file into a struct
 type Sheet struct {
-	file *excelize.File
-	name string
+	file    *excelize.File
+	name    string
+	columns []string
 }
 
 // Get/Create Sheets
 
-// Sheet retruns the sheet by name or creates a new one
+// Sheet retruns the sheet with the given name
 func (excel *Excel) Sheet(name string) *Sheet {
 	// Sheet exists
 	for _, existingSheet := range *excel.sheets {
@@ -26,7 +27,7 @@ func (excel *Excel) Sheet(name string) *Sheet {
 		}
 	}
 
-	newSheet := Sheet{file: excel.file, name: name}
+	newSheet := Sheet{file: excel.file, name: name, columns: []string{}}
 	excel.file.NewSheet(name)
 	return &newSheet
 }
@@ -188,4 +189,8 @@ func contains(slice []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func (sh *Sheet) header() []string {
+	return sh.file.GetRows(sh.name)[0]
 }
