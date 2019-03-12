@@ -117,7 +117,7 @@ func (sh *Sheet) AddValue(coords Coordinates, value interface{}, style Style) {
 func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 	freeRow := sh.NextRow()
 	for col, cell := range columnCellMap {
-		coords := Coordinates{column: col, row: freeRow}
+		coords := Coordinates{Column: col, Row: freeRow}
 		sh.file.SetCellValue(sh.name, coords.ToString(), cell.Value)
 		styleString := cell.Style.toString()
 		if styleString == "" {
@@ -135,7 +135,7 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 // AddEmptyRow adds an empty row at index row
 func (sh *Sheet) AddEmptyRow() {
 	freeRow := sh.NextRow()
-	sh.file.SetCellStr(sh.name, Coordinates{column: 0, row: freeRow}.ToString(), " ")
+	sh.file.SetCellStr(sh.name, Coordinates{Column: 0, Row: freeRow}.ToString(), " ")
 }
 
 // AddCondition adds a condition, that fills the cell red if its value is less than comparison

@@ -12,7 +12,7 @@ type Insertable interface {
 func (sh *Sheet) Add(data Insertable) {
 	if sh.isEmpty() {
 		fmt.Println("file is empty, adding header")
-		headerCoords := Coordinates{row: 0, column: 0}
+		headerCoords := Coordinates{Row: 0, Column: 0}
 		if len(data.Columns()) == 0 {
 			fmt.Printf("provide at least one struct, that satisfies Insertable and returns not an empty slice of strings in the Columns method")
 			return
@@ -20,7 +20,7 @@ func (sh *Sheet) Add(data Insertable) {
 		for _, col := range data.Columns() {
 			fmt.Printf("writing header %s at %s\n", col, headerCoords.ToString())
 			sh.file.SetCellStr(sh.name, headerCoords.ToString(), col)
-			headerCoords.column = headerCoords.column + 1
+			headerCoords.Column = headerCoords.Column + 1
 		}
 	}
 	data.Insert(sh)

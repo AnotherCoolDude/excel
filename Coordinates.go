@@ -8,13 +8,13 @@ import (
 
 // Coordinates wraps coordinates in a struct
 type Coordinates struct {
-	row, column int
+	Row, Column int
 }
 
 // ToString returns the coordinates as excelformatted string
 func (c Coordinates) ToString() string {
-	if c.row == 0 {
-		c.row = 1
+	if c.Row == 0 {
+		c.Row = 1
 	}
-	return fmt.Sprintf("%s%d", excelize.ToAlphaString(c.column), c.row)
+	return fmt.Sprintf("%s%d", excelize.ToAlphaString(c.Column), c.Row)
 }
