@@ -93,6 +93,11 @@ func (sh *Sheet) NextRow() int {
 	return len(sh.file.GetRows(sh.name)) + 1
 }
 
+// CurrentRow returns the current Row
+func (sh *Sheet) CurrentRow() int {
+	return len(sh.file.GetRows(sh.name))
+}
+
 // AddValue adds a value to the provided coordinates
 func (sh *Sheet) AddValue(coords Coordinates, value interface{}, style Style) {
 	sh.file.SetCellValue(sh.name, coords.ToString(), value)
