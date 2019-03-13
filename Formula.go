@@ -21,7 +21,6 @@ func (formula *Formula) Add() string {
 			str += "+"
 		}
 	}
-	fmt.Println(str)
 	return str
 }
 
