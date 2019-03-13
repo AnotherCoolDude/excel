@@ -12,7 +12,7 @@ type Formula struct {
 // Add adds the coords
 func (formula *Formula) Add() string {
 	if len(formula.Coords) == 0 {
-		return " "
+		return "0"
 	}
 	str := "="
 	for _, c := range formula.Coords {
@@ -28,7 +28,7 @@ func (formula *Formula) Add() string {
 // Substract substracts the provided coords. The minuend is defined by the function in parameter
 func (formula *Formula) Substract(fn func(coords []Coordinates) Coordinates) string {
 	if len(formula.Coords) == 0 {
-		return " "
+		return "0"
 	}
 	min := fn(formula.Coords)
 	str := fmt.Sprintf("=%s", min.ToString())
@@ -44,7 +44,7 @@ func (formula *Formula) Substract(fn func(coords []Coordinates) Coordinates) str
 // Raw provides the coords and expects a excel-ready string
 func (formula *Formula) Raw(fn func(coords []Coordinates) string) string {
 	if len(formula.Coords) == 0 {
-		return " "
+		return "0"
 	}
 	return fn(formula.Coords)
 }
