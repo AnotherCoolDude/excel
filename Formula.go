@@ -14,14 +14,28 @@ func (formula *Formula) Add() string {
 	if len(formula.Coords) == 0 {
 		return "0"
 	}
-	str := "="
+
+	lowest := formula.Coords[0]
+	highest := formula.Coords[0]
+
+	for _, coord := range formula.Coords {
+		if coord.Row <= lowest.Row && coord.Column <= lowest.Column {
+			lowest = coord
+		}
+		if coord.Row >= highest.Row && coord.Column >= highest.Column {
+			highest = coord
+		}
+	}
+
+	return fmt.Sprintf("=SUMME(%s:%s)", lowest.ToString(), highest.ToString())
+	/*str := "="
 	for _, c := range formula.Coords {
 		str += c.ToString()
 		if c != formula.Coords[len(formula.Coords)-1] {
 			str += "+"
 		}
 	}
-	return str
+	return str*/
 }
 
 // Substract substracts the provided coords. The minuend is defined by the function in parameter
