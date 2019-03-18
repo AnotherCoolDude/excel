@@ -9,8 +9,8 @@ type Formula struct {
 	Coords []Coordinates
 }
 
-// Add adds the coords
-func (formula *Formula) Add() string {
+// Sum sums up the provided coords
+func (formula *Formula) Sum() string {
 	if len(formula.Coords) == 0 {
 		return "0"
 	}
@@ -28,14 +28,23 @@ func (formula *Formula) Add() string {
 	}
 
 	return fmt.Sprintf("=SUMME(%s:%s)", lowest.ToString(), highest.ToString())
-	/*str := "="
+}
+
+// Add adds the coords
+func (formula *Formula) Add() string {
+	if len(formula.Coords) == 0 {
+		return "0"
+	}
+
+	str := "="
 	for _, c := range formula.Coords {
 		str += c.ToString()
 		if c != formula.Coords[len(formula.Coords)-1] {
 			str += "+"
 		}
 	}
-	return str*/
+	return str
+
 }
 
 // Substract substracts the provided coords. The minuend is defined by the function in parameter
