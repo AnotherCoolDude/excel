@@ -17,10 +17,18 @@ func (sh *Sheet) Add(data Insertable) {
 			fmt.Printf("provide at least one struct, that satisfies Insertable and returns not an empty slice of strings in the Columns method")
 			return
 		}
-		for _, col := range data.Columns() {
-			fmt.Printf("writing header %s at %s\n", col, headerCoords.ToString())
-			sh.file.SetCellStr(sh.name, headerCoords.ToString(), col)
-			headerCoords.Column = headerCoords.Column + 1
+		if sh.draftMode {
+			headerCells := []Cell{}
+			for _, header := range data.Columns() {
+				headerCells = append(headerCells, Cell{Value: header, Style: NoStyle()})
+			}
+			sh.draft = append(sh.draft, headerCells)
+		} else {
+			for _, col := range data.Columns() {
+				fmt.Printf("writing header %s at %s\n", col, headerCoords.ToString())
+				sh.file.SetCellStr(sh.name, headerCoords.ToString(), col)
+				headerCoords.Column = headerCoords.Column + 1
+			}
 		}
 	}
 	data.Insert(sh)

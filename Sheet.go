@@ -14,6 +14,10 @@ type Sheet struct {
 	file    *excelize.File
 	name    string
 	columns []string
+
+	//experimenting
+	draft     [][]Cell
+	draftMode bool
 }
 
 // Get/Create Sheets
@@ -27,9 +31,14 @@ func (excel *Excel) Sheet(name string) *Sheet {
 		}
 	}
 
-	newSheet := Sheet{file: excel.file, name: name, columns: []string{}}
+	newSheet := Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, draftMode: false}
 	excel.file.NewSheet(name)
 	return &newSheet
+}
+
+// NewDraftSheet returns a sheet, that has draftmode enabled
+func (excel *Excel) NewDraftSheet(name string) *Sheet {
+	return &Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, draftMode: true}
 }
 
 // FirstSheet returns the first sheet found in the excel file
@@ -90,11 +99,17 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 
 // NextRow returns the next free Row
 func (sh *Sheet) NextRow() int {
-	return len(sh.file.GetRows(sh.name)) + 1
+	if sh.draftMode {
+		return len(sh.draft)
+	}
+	return sh.CurrentRow() + 1
 }
 
 // CurrentRow returns the current Row
 func (sh *Sheet) CurrentRow() int {
+	if sh.draftMode {
+		return len(sh.draft) - 1
+	}
 	return len(sh.file.GetRows(sh.name))
 }
 
@@ -116,6 +131,22 @@ func (sh *Sheet) AddValue(coords Coordinates, value interface{}, style Style) {
 // AddRow scanns for the next available row and inserts cells at the given indexes provided by the map
 func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 	freeRow := sh.NextRow()
+	if sh.draftMode {
+		columns := []int{}
+		for col := range columnCellMap {
+			columns = append(columns, col)
+		}
+		newRow := []Cell{}
+		for i := 0; i != maxInt(columns); i++ {
+			if val, ok := columnCellMap[i]; ok {
+				newRow = append(newRow, val)
+			} else {
+				newRow = append(newRow, Cell{Value: draftCell, Style: NoStyle()})
+			}
+		}
+		sh.draft = append(sh.draft, newRow)
+		return
+	}
 	for col, cell := range columnCellMap {
 		coords := Coordinates{Column: col, Row: freeRow}
 		sh.file.SetCellValue(sh.name, coords.ToString(), cell.Value)
@@ -134,6 +165,10 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 
 // AddEmptyRow adds an empty row at index row
 func (sh *Sheet) AddEmptyRow() {
+	if sh.draftMode {
+		sh.draft = append(sh.draft, []Cell{Cell{Value: " ", Style: NoStyle()}})
+		return
+	}
 	freeRow := sh.NextRow()
 	sh.file.SetCellStr(sh.name, Coordinates{Column: 0, Row: freeRow}.ToString(), " ")
 }
@@ -149,7 +184,10 @@ func (sh *Sheet) AddCondition(coord Coordinates, comparison float32) {
 }
 
 // GetValue returns the Value from the cell at coord
-func (sh *Sheet) GetValue(coord Coordinates) string {
+func (sh *Sheet) GetValue(coord Coordinates) interface{} {
+	if sh.draftMode {
+		return sh.draft[coord.Column][coord.Row].Value
+	}
 	return sh.file.GetCellValue(sh.name, coord.ToString())
 }
 
@@ -161,6 +199,12 @@ func (sh *Sheet) FreezeHeader() {
 // Helper
 
 func (sh *Sheet) isEmpty() bool {
+	if sh.draftMode {
+		if len(sh.draft) == 0 {
+			return true
+		}
+		return false
+	}
 	if len(sh.file.GetRows(sh.name)) == 0 {
 		return true
 	}
@@ -201,5 +245,26 @@ func contains(slice []string, value string) bool {
 }
 
 func (sh *Sheet) header() []string {
+	if sh.draftMode {
+		cols := []string{}
+		for _, header := range sh.draft[0] {
+			cols = append(cols, fmt.Sprintf("%v", header.Value))
+		}
+		return cols
+	}
 	return sh.file.GetRows(sh.name)[0]
+}
+
+func maxInt(slice []int) int {
+	if len(slice) == 0 {
+		fmt.Println("slice is empty")
+		return 0
+	}
+	max := 0
+	for _, i := range slice {
+		if i > max {
+			max = i
+		}
+	}
+	return max
 }

@@ -7,6 +7,10 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 )
 
+const (
+	draftCell = "DRAFT_CELL"
+)
+
 // Excel wraps the excelize package
 type Excel struct {
 	file   *excelize.File
@@ -43,5 +47,31 @@ func File(path string, sheetname string) *Excel {
 
 // Save saves the Excelfile to the provided path
 func (excel *Excel) Save(path string) {
+	for _, sheet := range *excel.sheets {
+		if sheet.draftMode {
+			currentCoords := Coordinates{Row: 0, Column: 0}
+			for i, row := range sheet.draft {
+				for j, cell := range row {
+					if cell.Value == draftCell {
+						continue
+					}
+					currentCoords.Row = i
+					currentCoords.Column = j
+					styleString := cell.Style.toString()
+					excel.file.SetCellValue(sheet.name, currentCoords.ToString(), cell.Value)
+					if styleString == "" {
+						continue
+					}
+					st, err := excel.file.NewStyle(styleString)
+					if err != nil {
+						fmt.Println(styleString)
+						fmt.Println(err)
+					}
+					excel.file.SetCellStyle(sheet.name, currentCoords.ToString(), currentCoords.ToString(), st)
+				}
+			}
+		}
+	}
+
 	excel.file.SaveAs(path)
 }
