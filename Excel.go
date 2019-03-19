@@ -45,6 +45,22 @@ func File(path string, sheetname string) *Excel {
 	}
 }
 
+// NewDraftFile creates a new ExcelFile, that has Draftmode enabled
+func NewDraftFile(path string, sheetname string) *Excel {
+	var eFile *excelize.File
+	var sheets []Sheet
+	fmt.Println("file not existing, creating new...")
+	eFile = excelize.NewFile()
+	sheetIndex := eFile.GetActiveSheetIndex()
+	oldName := eFile.GetSheetName(sheetIndex)
+	eFile.SetSheetName(oldName, sheetname)
+	sheets = append(sheets, Sheet{file: eFile, name: sheetname, columns: []string{}, draft: [][]Cell{}, draftMode: true})
+	return &Excel{
+		file:   eFile,
+		sheets: &sheets,
+	}
+}
+
 // Save saves the Excelfile to the provided path
 func (excel *Excel) Save(path string) {
 	for _, sheet := range *excel.sheets {
