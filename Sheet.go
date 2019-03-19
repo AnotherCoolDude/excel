@@ -184,7 +184,11 @@ func PrintHeader(sh *Sheet, startingRow int) {
 		fmt.Print(t)
 		fmt.Println()
 	}
+}
 
+// HeaderColumns returns the header columns of sheet
+func (sh *Sheet) HeaderColumns() []string {
+	return sh.columns
 }
 
 func contains(slice []string, value string) bool {
