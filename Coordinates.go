@@ -1,8 +1,6 @@
 package excel
 
 import (
-	"fmt"
-
 	"github.com/360EntSecGroup-Skylar/excelize"
 )
 
@@ -16,5 +14,5 @@ func (c Coordinates) ToString() string {
 	if c.Row == 0 {
 		c.Row = 1
 	}
-	return fmt.Sprintf("%s%d", excelize.ToAlphaString(c.Column), c.Row)
+	return excelize.MustCoordinatesToCellName(c.Column, c.Row)
 }

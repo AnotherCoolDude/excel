@@ -65,7 +65,11 @@ func (sh *Sheet) FilterByHeader(header []string) [][]string {
 	}
 	sortedColumns := []string{}
 	for _, h := range header {
-		sortedColumns = append(sortedColumns, excelize.ToAlphaString(m[h]))
+		columnName, err := excelize.ColumnNumberToName(m[h])
+		if err != nil {
+			fmt.Println(err)
+		}
+		sortedColumns = append(sortedColumns, columnName)
 	}
 	return sh.FilterByColumn(sortedColumns)
 }
@@ -81,8 +85,12 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 	for _, row := range data {
 		filterMap := map[string]string{}
 		for col, val := range row {
-			if contains(columns, excelize.ToAlphaString(col)) {
-				filterMap[excelize.ToAlphaString(col)] = val
+			columnName, err := excelize.ColumnNumberToName(col)
+			if err != nil {
+				fmt.Println(err)
+			}
+			if contains(columns, columnName) {
+				filterMap[columnName] = val
 			}
 		}
 		sortedRow := []string{}
@@ -100,7 +108,7 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 // NextRow returns the next free Row
 func (sh *Sheet) NextRow() int {
 	if sh.draftMode {
-		return len(sh.draft)
+		return len(sh.draft) + 1
 	}
 	return sh.CurrentRow() + 1
 }
@@ -108,7 +116,7 @@ func (sh *Sheet) NextRow() int {
 // CurrentRow returns the current Row
 func (sh *Sheet) CurrentRow() int {
 	if sh.draftMode {
-		return len(sh.draft) - 1
+		return len(sh.draft)
 	}
 	return len(sh.file.GetRows(sh.name))
 }
@@ -222,7 +230,11 @@ func PrintHeader(sh *Sheet, startingRow int) {
 		headerTableData = append(headerTableData, []string{strconv.Itoa(k), v})
 		rows := sh.file.GetRows(v)
 		for index, head := range rows[startingRow] {
-			headerTableData = append(headerTableData, []string{fmt.Sprintf("%s%d", excelize.ToAlphaString(index), startingRow+1), head})
+			coordString, err := excelize.CoordinatesToCellName(index, startingRow+1)
+			if err != nil {
+				fmt.Println(err)
+			}
+			headerTableData = append(headerTableData, []string{coordString, head})
 		}
 		t := Table(headerTableData)
 		fmt.Print(t)
