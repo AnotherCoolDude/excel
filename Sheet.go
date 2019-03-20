@@ -59,7 +59,7 @@ func (sh *Sheet) FilterByHeader(header []string) [][]string {
 	m := map[string]int{}
 
 	for i, col := range data[0] {
-		if contains(header, col) {
+		if containsString(header, col) {
 			m[col] = i
 		}
 	}
@@ -81,7 +81,10 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 	}
 	data := sh.file.GetRows(sh.name)
 	filteredData := [][]string{}
-
+	columnsNumeric := []int{}
+	for _, c := range columns {
+		columnsNumeric = append(columnsNumeric, excelize.MustColumnNameToNumber(c))
+	}
 	for _, row := range data {
 		filterMap := map[string]string{}
 		for col, val := range row {
@@ -90,7 +93,7 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 			if err != nil {
 				fmt.Println(err)
 			}
-			if contains(columns, columnName) {
+			if containsString(columns, columnName) {
 				filterMap[columnName] = val
 			}
 		}
@@ -101,6 +104,27 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 		filteredData = append(filteredData, sortedRow)
 	}
 
+	return filteredData[1:]
+}
+
+// ExtractColumns returns columns from sheet
+func (sh *Sheet) ExtractColumns(columns []string) [][]string {
+	numeric := []int{}
+	rawData := sh.file.GetRows(sh.name)
+	filteredData := [][]string{}
+
+	for _, c := range columns {
+		numeric = append(numeric, excelize.MustColumnNameToNumber(c))
+	}
+	for _, row := range rawData {
+		filteredRow := []string{}
+		for j, cell := range row {
+			if containsInt(numeric, j+1) {
+				filteredRow = append(filteredRow, cell)
+			}
+		}
+		filteredData = append(filteredData, filteredRow)
+	}
 	return filteredData[1:]
 }
 
@@ -146,13 +170,14 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 			columns = append(columns, col)
 		}
 		newRow := []Cell{}
-		for i := 0; i != maxInt(columns); i++ {
+		for i := 0; i < len(sh.columns); i++ {
 			if val, ok := columnCellMap[i]; ok {
 				newRow = append(newRow, val)
 			} else {
 				newRow = append(newRow, Cell{Value: draftCell, Style: NoStyle()})
 			}
 		}
+
 		sh.draft = append(sh.draft, newRow)
 		return
 	}
@@ -248,7 +273,16 @@ func (sh *Sheet) HeaderColumns() []string {
 	return sh.columns
 }
 
-func contains(slice []string, value string) bool {
+func containsInt(slice []int, value int) bool {
+	for _, i := range slice {
+		if i == value {
+			return true
+		}
+	}
+	return false
+}
+
+func containsString(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
 			return true

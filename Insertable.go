@@ -23,6 +23,7 @@ func (sh *Sheet) Add(data Insertable) {
 				headerCells = append(headerCells, Cell{Value: header, Style: NoStyle()})
 			}
 			sh.draft = append(sh.draft, headerCells)
+			sh.columns = data.Columns()
 		} else {
 			for _, col := range data.Columns() {
 				fmt.Printf("writing header %s at %s\n", col, headerCoords.ToString())
