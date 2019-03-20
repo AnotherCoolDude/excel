@@ -14,5 +14,8 @@ func (c Coordinates) ToString() string {
 	if c.Row == 0 {
 		c.Row = 1
 	}
+	if c.Column == 0 {
+		c.Column = 1
+	}
 	return excelize.MustCoordinatesToCellName(c.Column, c.Row)
 }

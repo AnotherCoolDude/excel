@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
+	"github.com/schollz/progressbar"
 )
 
 const (
@@ -65,16 +66,19 @@ func NewDraftFile(path string, sheetname string) *Excel {
 func (excel *Excel) Save(path string) {
 	for _, sheet := range *excel.sheets {
 		if sheet.draftMode {
+			bar := progressbar.New(len(sheet.draft))
 			currentCoords := Coordinates{Row: 0, Column: 0}
 			for i, row := range sheet.draft {
 				for j, cell := range row {
+					bar.Add(1)
 					if cell.Value == draftCell {
 						continue
 					}
-					currentCoords.Row = i
-					currentCoords.Column = j
-					styleString := cell.Style.toString()
+					currentCoords.Row = i + 1
+					currentCoords.Column = j + 1
 					excel.file.SetCellValue(sheet.name, currentCoords.ToString(), cell.Value)
+
+					styleString := cell.Style.toString()
 					if styleString == "" {
 						continue
 					}
@@ -90,4 +94,5 @@ func (excel *Excel) Save(path string) {
 	}
 
 	excel.file.SaveAs(path)
+	println()
 }

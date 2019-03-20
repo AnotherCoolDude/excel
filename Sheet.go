@@ -85,7 +85,8 @@ func (sh *Sheet) FilterByColumn(columns []string) [][]string {
 	for _, row := range data {
 		filterMap := map[string]string{}
 		for col, val := range row {
-			columnName, err := excelize.ColumnNumberToName(col)
+
+			columnName, err := excelize.ColumnNumberToName(col + 1)
 			if err != nil {
 				fmt.Println(err)
 			}
