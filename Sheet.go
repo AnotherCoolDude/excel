@@ -47,6 +47,7 @@ func (sh *Sheet) GetWriteAccess() {
 		fmt.Printf("write access for sheet %s already granted\n", sh.name)
 		return
 	}
+	sh.draft = [][]Cell{}
 	rows := sh.file.GetRows(sh.name)
 	for i, row := range rows {
 		newCellRow := []Cell{}
@@ -130,9 +131,14 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-
+	headerCells := []Cell{}
 	for _, h := range header {
-		sh.draft[0] = append(sh.draft[0], Cell{Value: h, Style: NoStyle()})
+		headerCells = append(headerCells, Cell{Value: h, Style: NoStyle()})
+	}
+	if len(sh.draft) == 0 {
+		sh.draft = append(sh.draft, headerCells)
+	} else {
+		sh.draft[0] = headerCells
 	}
 	sh.columns = header
 }

@@ -28,7 +28,7 @@ func File(path string, sheetname string) *Excel {
 		sheetIndex := eFile.GetActiveSheetIndex()
 		oldName := eFile.GetSheetName(sheetIndex)
 		eFile.SetSheetName(oldName, sheetname)
-		sheets = append(sheets, Sheet{file: eFile, name: sheetname, columns: []string{}, writeAccess: true})
+		sheets = append(sheets, Sheet{file: eFile, name: sheetname, columns: []string{}, draft: [][]Cell{}, writeAccess: true})
 	} else {
 		fmt.Printf("found file at path %s\n", path)
 		eFile, err = excelize.OpenFile(path)
