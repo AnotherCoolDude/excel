@@ -88,7 +88,7 @@ func (s Style) toString() string {
 // RawID returns true and styleID, if s was initialized with a raw ID
 func (s *Style) RawID() (bool, int) {
 	if s.Border == -1 {
-		return true, s.Format
+		return true, int(s.Format)
 	}
 	return false, 0
 }

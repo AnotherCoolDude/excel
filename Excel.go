@@ -30,7 +30,7 @@ func File(path string, sheetname string) *Excel {
 		eFile.SetSheetName(oldName, sheetname)
 		sheets = append(sheets, Sheet{file: eFile, name: sheetname, columns: []string{}, writeAccess: true})
 	} else {
-		fmt.Println("found file at path %s\n", path)
+		fmt.Printf("found file at path %s\n", path)
 		eFile, err = excelize.OpenFile(path)
 		sheetMap := eFile.GetSheetMap()
 		for _, name := range sheetMap {
@@ -51,7 +51,7 @@ func File(path string, sheetname string) *Excel {
 func (excel *Excel) Save(path string) {
 	for _, sheet := range *excel.sheets {
 		if !sheet.writeAccess {
-			fmt.Println("WARNING: didn't save. No write access for sheet %s\n", sheet.name)
+			fmt.Printf("WARNING: didn't save. No write access for sheet %s\n", sheet.name)
 			continue
 		}
 		bar := progressbar.New(len(sheet.draft))
@@ -67,11 +67,15 @@ func (excel *Excel) Save(path string) {
 				currentCoords.Column = j + 1
 				excel.file.SetCellValue(sheet.name, currentCoords.ToString(), cell.Value)
 
+				if isRaw, id := cell.Style.RawID(); isRaw {
+					excel.file.SetCellStyle(sheet.name, currentCoords.ToString(), currentCoords.ToString(), id)
+					continue
+				}
+
 				styleString := cell.Style.toString()
 				if styleString == "" {
 					continue
 				}
-				if cell.Style.
 				st, err := excel.file.NewStyle(styleString)
 				if err != nil {
 					fmt.Println(styleString)

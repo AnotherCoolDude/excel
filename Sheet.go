@@ -44,7 +44,7 @@ func (sh *Sheet) clearSheet() {
 // GetWriteAccess populates draft with current content fo sheet and grants write access
 func (sh *Sheet) GetWriteAccess() {
 	if sh.writeAccess {
-		fmt.Println("write access for sheet %s already granted\n", sh.name)
+		fmt.Printf("write access for sheet %s already granted\n", sh.name)
 		return
 	}
 	rows := sh.file.GetRows(sh.name)
@@ -76,7 +76,7 @@ func (sh *Sheet) ExtractColumnsByName(columnNames []string) [][]string {
 	for _, columnName := range columnNames {
 		columnstring, err := excelize.ColumnNumberToName(columnMap[columnName])
 		if err != nil {
-			fmt.Println("error converting index to columnname: %s\n", err)
+			fmt.Printf("error converting index to columnname: %s\n", err)
 			continue
 		}
 		columns = append(columns, columnstring)
@@ -123,7 +123,7 @@ func (sh *Sheet) CurrentRow() int {
 // AddHeaderColumn adds a header column to sheet
 func (sh *Sheet) AddHeaderColumn(header []string) {
 	if !sh.writeAccess {
-		fmt.Println("no permission to write to sheet %s\n", sh.name)
+		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
 
@@ -136,14 +136,13 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 // AddRow scanns for the next available row and inserts cells at the given indexes provided by the map
 func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 	if !sh.writeAccess {
-		fmt.Println("no permission to write to sheet %s\n", sh.name)
+		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
 
 	if len(sh.draft) == 0 {
-		fmt.Println("WARNING: Sheet %s has no header column\n", sh.name)
+		fmt.Printf("WARNING: Sheet %s has no header column\n", sh.name)
 	}
-	freeRow := sh.NextRow()
 	columns := []int{}
 	for col := range columnCellMap {
 		columns = append(columns, col)
@@ -163,7 +162,7 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 // AddEmptyRow adds an empty row at index row
 func (sh *Sheet) AddEmptyRow() {
 	if !sh.writeAccess {
-		fmt.Println("no permission to write to sheet %s\n", sh.name)
+		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
 	sh.draft = append(sh.draft, []Cell{Cell{Value: " ", Style: NoStyle()}})
