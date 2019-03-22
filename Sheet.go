@@ -160,7 +160,7 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 	}
 	newRow := []Cell{}
 
-	for i := 0; i < maxInt(newRowIndexes); i++ {
+	for i := 1; i != maxInt(newRowIndexes)+1; i++ {
 		if val, ok := columnCellMap[i]; ok {
 			newRow = append(newRow, val)
 		} else {
