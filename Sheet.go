@@ -144,15 +144,17 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 		return
 	}
 
-	if len(sh.draft) == 0 {
+	if len(sh.columns) == 0 {
 		fmt.Printf("WARNING: Sheet %s has no header column\n", sh.name)
 	}
-	columns := []int{}
-	for col := range columnCellMap {
-		columns = append(columns, col)
+
+	newRowIndexes := []int{}
+	for index := range columnCellMap {
+		newRowIndexes = append(newRowIndexes, index)
 	}
 	newRow := []Cell{}
-	for i := 0; i < len(sh.columns); i++ {
+
+	for i := 0; i < maxInt(newRowIndexes); i++ {
 		if val, ok := columnCellMap[i]; ok {
 			newRow = append(newRow, val)
 		} else {
