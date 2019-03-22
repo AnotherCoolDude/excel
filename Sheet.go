@@ -11,18 +11,16 @@ import (
 
 // Sheet wraps the sheets of a excel file into a struct
 type Sheet struct {
-	file    *excelize.File
-	name    string
-	columns []string
-
-	//experimenting
-	draft     [][]Cell
-	draftMode bool
+	file        *excelize.File
+	name        string
+	columns     []string
+	draft       [][]Cell
+	writeAccess bool
 }
 
 // Get/Create Sheets
 
-// Sheet retruns the sheet with the given name
+// Sheet retruns the sheet with the given name or creates a new one
 func (excel *Excel) Sheet(name string) *Sheet {
 	// Sheet exists
 	for _, existingSheet := range *excel.sheets {
@@ -31,15 +29,12 @@ func (excel *Excel) Sheet(name string) *Sheet {
 		}
 	}
 
-	newSheet := Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, draftMode: false}
+	newSheet := Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, writeAccess: true}
 	excel.file.NewSheet(name)
 	return &newSheet
 }
 
-// NewDraftSheet returns a sheet, that has draftmode enabled
-func (excel *Excel) NewDraftSheet(name string) *Sheet {
-	return &Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, draftMode: true}
-}
+func (sh *sheet) ClearSheet() {}
 
 // FirstSheet returns the first sheet found in the excel file
 func (excel *Excel) FirstSheet() *Sheet {
@@ -47,64 +42,24 @@ func (excel *Excel) FirstSheet() *Sheet {
 	return &(*shs)[0]
 }
 
-// Filter Sheets
-
-// FilterByHeader filters the excel file by its headertitle
-func (sh *Sheet) FilterByHeader(header []string) [][]string {
-	if sh.isEmpty() {
-		return nil
-	}
-
-	data := sh.file.GetRows(sh.name)
-	m := map[string]int{}
-
-	for i, col := range data[0] {
-		if containsString(header, col) {
-			m[col] = i
+// ExtractColumnsByName extracts columns by there names from sheet
+func (sh *Sheet) ExtractColumnsByName(columnNames []string) [][]string {
+	columns := []string{}
+	columnMap := map[string]int{}
+	for i, name := range sh.columns {
+		if containsString(columnNames, name) {
+			columnMap[name] = i + 1
 		}
 	}
-	sortedColumns := []string{}
-	for _, h := range header {
-		columnName, err := excelize.ColumnNumberToName(m[h])
+	for _, columnName := range columnNames {
+		columnstring, err := excelize.ColumnNumberToName(columnMap[columnName])
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("error converting index to columnname: %s\n", err)
+			continue
 		}
-		sortedColumns = append(sortedColumns, columnName)
+		columns = append(columns, columnstring)
 	}
-	return sh.FilterByColumn(sortedColumns)
-}
-
-// FilterByColumn filters the excel file by its column
-func (sh *Sheet) FilterByColumn(columns []string) [][]string {
-	if sh.isEmpty() {
-		return nil
-	}
-	data := sh.file.GetRows(sh.name)
-	filteredData := [][]string{}
-	columnsNumeric := []int{}
-	for _, c := range columns {
-		columnsNumeric = append(columnsNumeric, excelize.MustColumnNameToNumber(c))
-	}
-	for _, row := range data {
-		filterMap := map[string]string{}
-		for col, val := range row {
-
-			columnName, err := excelize.ColumnNumberToName(col + 1)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if containsString(columns, columnName) {
-				filterMap[columnName] = val
-			}
-		}
-		sortedRow := []string{}
-		for _, c := range columns {
-			sortedRow = append(sortedRow, filterMap[c])
-		}
-		filteredData = append(filteredData, sortedRow)
-	}
-
-	return filteredData[1:]
+	return sh.ExtractColumns(columns)
 }
 
 // ExtractColumns returns columns from sheet
@@ -132,97 +87,82 @@ func (sh *Sheet) ExtractColumns(columns []string) [][]string {
 
 // NextRow returns the next free Row
 func (sh *Sheet) NextRow() int {
-	if sh.draftMode {
-		return len(sh.draft) + 1
-	}
 	return sh.CurrentRow() + 1
 }
 
 // CurrentRow returns the current Row
 func (sh *Sheet) CurrentRow() int {
-	if sh.draftMode {
-		return len(sh.draft)
+	if !sh.writeAccess {
+		return len(sh.file.GetRows(sh.name))
 	}
-	return len(sh.file.GetRows(sh.name))
+	return len(sh.draft)
 }
 
-// AddValue adds a value to the provided coordinates
-func (sh *Sheet) AddValue(coords Coordinates, value interface{}, style Style) {
-	sh.file.SetCellValue(sh.name, coords.ToString(), value)
-	styleString := style.toString()
-	if styleString == "" {
+// AddHeaderColumn adds a header column to sheet
+func (sh *Sheet) AddHeaderColumn(header []string) {
+	if !sh.writeAccess {
+		fmt.Println("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	st, err := sh.file.NewStyle(styleString)
-	if err != nil {
-		fmt.Println(styleString)
-		fmt.Println(err)
+
+	for _, h := range header {
+		sh.draft[0] = append(sh.draft[0], Cell{Value: h, Style: NoStyle()})
 	}
-	sh.file.SetCellStyle(sh.name, coords.ToString(), coords.ToString(), st)
+	sh.columns = header
 }
 
 // AddRow scanns for the next available row and inserts cells at the given indexes provided by the map
 func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
-	freeRow := sh.NextRow()
-	if sh.draftMode {
-		columns := []int{}
-		for col := range columnCellMap {
-			columns = append(columns, col)
-		}
-		newRow := []Cell{}
-		for i := 0; i < len(sh.columns); i++ {
-			if val, ok := columnCellMap[i]; ok {
-				newRow = append(newRow, val)
-			} else {
-				newRow = append(newRow, Cell{Value: draftCell, Style: NoStyle()})
-			}
-		}
-
-		sh.draft = append(sh.draft, newRow)
+	if !sh.writeAccess {
+		fmt.Println("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	for col, cell := range columnCellMap {
-		coords := Coordinates{Column: col, Row: freeRow}
-		sh.file.SetCellValue(sh.name, coords.ToString(), cell.Value)
-		styleString := cell.Style.toString()
-		if styleString == "" {
-			continue
-		}
-		st, err := sh.file.NewStyle(styleString)
-		if err != nil {
-			fmt.Println(styleString)
-			fmt.Println(err)
-		}
-		sh.file.SetCellStyle(sh.name, coords.ToString(), coords.ToString(), st)
+
+	if len(sh.draft) == 0 {
+		fmt.Println("WARNING: Sheet %s has no header column\n", sh.name)
 	}
+	freeRow := sh.NextRow()
+	columns := []int{}
+	for col := range columnCellMap {
+		columns = append(columns, col)
+	}
+	newRow := []Cell{}
+	for i := 0; i < len(sh.columns); i++ {
+		if val, ok := columnCellMap[i]; ok {
+			newRow = append(newRow, val)
+		} else {
+			newRow = append(newRow, Cell{Value: draftCell, Style: NoStyle()})
+		}
+	}
+
+	sh.draft = append(sh.draft, newRow)
 }
 
 // AddEmptyRow adds an empty row at index row
 func (sh *Sheet) AddEmptyRow() {
-	if sh.draftMode {
-		sh.draft = append(sh.draft, []Cell{Cell{Value: " ", Style: NoStyle()}})
+	if !sh.writeAccess {
+		fmt.Println("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	freeRow := sh.NextRow()
-	sh.file.SetCellStr(sh.name, Coordinates{Column: 0, Row: freeRow}.ToString(), " ")
+	sh.draft = append(sh.draft, []Cell{Cell{Value: " ", Style: NoStyle()}})
 }
 
 // AddCondition adds a condition, that fills the cell red if its value is less than comparison
-func (sh *Sheet) AddCondition(coord Coordinates, comparison float32) {
-	compString := fmt.Sprintf("%f", comparison)
-	format, err := sh.file.NewConditionalStyle(`{"fill":{"type":"pattern","color":["#F44E42"],"pattern":1}}`)
-	if err != nil {
-		fmt.Printf("couldn't create conditional style: %s\n", err)
-	}
-	sh.file.SetConditionalFormat(sh.name, coord.ToString(), fmt.Sprintf(`[{"type":"cell","criteria":"<","format":%d,"value":%s}]`, format, compString))
-}
+// func (sh *Sheet) AddCondition(coord Coordinates, comparison float32) {
+// 	compString := fmt.Sprintf("%f", comparison)
+// 	format, err := sh.file.NewConditionalStyle(`{"fill":{"type":"pattern","color":["#F44E42"],"pattern":1}}`)
+// 	if err != nil {
+// 		fmt.Printf("couldn't create conditional style: %s\n", err)
+// 	}
+// 	sh.file.SetConditionalFormat(sh.name, coord.ToString(), fmt.Sprintf(`[{"type":"cell","criteria":"<","format":%d,"value":%s}]`, format, compString))
+// }
 
 // GetValue returns the Value from the cell at coord
 func (sh *Sheet) GetValue(coord Coordinates) interface{} {
-	if sh.draftMode {
-		return sh.draft[coord.Column][coord.Row].Value
+	if !sh.writeAccess {
+		return sh.file.GetCellValue(sh.name, coord.ToString())
 	}
-	return sh.file.GetCellValue(sh.name, coord.ToString())
+	return sh.draft[coord.Column][coord.Row].Value
 }
 
 // FreezeHeader freezes the headerrow
@@ -233,13 +173,7 @@ func (sh *Sheet) FreezeHeader() {
 // Helper
 
 func (sh *Sheet) isEmpty() bool {
-	if sh.draftMode {
-		if len(sh.draft) == 0 {
-			return true
-		}
-		return false
-	}
-	if len(sh.file.GetRows(sh.name)) == 0 {
+	if len(sh.draft) == 0 {
 		return true
 	}
 	return false
@@ -289,17 +223,6 @@ func containsString(slice []string, value string) bool {
 		}
 	}
 	return false
-}
-
-func (sh *Sheet) header() []string {
-	if sh.draftMode {
-		cols := []string{}
-		for _, header := range sh.draft[0] {
-			cols = append(cols, fmt.Sprintf("%v", header.Value))
-		}
-		return cols
-	}
-	return sh.file.GetRows(sh.name)[0]
 }
 
 func maxInt(slice []int) int {
