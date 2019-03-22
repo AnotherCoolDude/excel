@@ -1,5 +1,7 @@
 package excel
 
+import "fmt"
+
 // Constants
 
 const (
@@ -44,6 +46,11 @@ type FormatID int
 func (s Style) toString() string {
 	st := ""
 
+	if ok, _ := s.RawID(); ok {
+		fmt.Println("style has been initialized with a raw id, use RawID() instead")
+		return st
+	}
+
 	if s.Border == NoBorder && s.Format == NoFormat {
 		return st
 	}
@@ -78,7 +85,23 @@ func (s Style) toString() string {
 	return st
 }
 
+// RawID returns true and styleID, if s was initialized with a raw ID
+func (s *Style) RawID() (bool, int) {
+	if s.Border == -1 {
+		return true, s.Format
+	}
+	return false, 0
+}
+
 // Convenience
+
+// RawID returns a Style struct with the provided styleID
+func RawID(id int) Style {
+	return Style{
+		Border: -1,
+		Format: FormatID(id),
+	}
+}
 
 // DateStyle returns a Style struct that sets the cell to a date
 func DateStyle() Style {

@@ -34,7 +34,29 @@ func (excel *Excel) Sheet(name string) *Sheet {
 	return &newSheet
 }
 
-func (sh *sheet) ClearSheet() {}
+// ClearSheet clears the content of sheet, but not the draft of sheet
+func (sh *Sheet) clearSheet() {
+	name := sh.name
+	sh.file.DeleteSheet(name)
+	sh.file.NewSheet(name)
+}
+
+// GetWriteAccess populates draft with current content fo sheet and grants write access
+func (sh *Sheet) GetWriteAccess() {
+	if sh.writeAccess {
+		fmt.Println("write access for sheet %s already granted\n", sh.name)
+		return
+	}
+	rows := sh.file.GetRows(sh.name)
+	for i, row := range rows {
+		newCellRow := []Cell{}
+		for j, str := range row {
+			styleID := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.ToString())
+			newCellRow = append(newCellRow, Cell{Value: str, Style: RawID(styleID)})
+		}
+		sh.draft = append(sh.draft, newCellRow)
+	}
+}
 
 // FirstSheet returns the first sheet found in the excel file
 func (excel *Excel) FirstSheet() *Sheet {

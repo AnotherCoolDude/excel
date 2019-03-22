@@ -55,6 +55,7 @@ func (excel *Excel) Save(path string) {
 			continue
 		}
 		bar := progressbar.New(len(sheet.draft))
+		sheet.clearSheet()
 		currentCoords := Coordinates{Row: 0, Column: 0}
 		for i, row := range sheet.draft {
 			for j, cell := range row {
@@ -70,6 +71,7 @@ func (excel *Excel) Save(path string) {
 				if styleString == "" {
 					continue
 				}
+				if cell.Style.
 				st, err := excel.file.NewStyle(styleString)
 				if err != nil {
 					fmt.Println(styleString)
