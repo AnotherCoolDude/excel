@@ -56,6 +56,10 @@ func (sh *Sheet) GetWriteAccess() {
 		}
 		sh.draft = append(sh.draft, newCellRow)
 	}
+	for _, cell := range sh.draft[0] {
+		sh.columns = append(sh.columns, fmt.Sprintf("%s", cell.Value))
+	}
+	sh.writeAccess = true
 }
 
 // FirstSheet returns the first sheet found in the excel file
