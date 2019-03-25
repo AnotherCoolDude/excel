@@ -43,7 +43,7 @@ type FormatID int
 
 // encode structs to string
 
-func (s Style) toString() string {
+func (s Style) string() string {
 	st := ""
 
 	if ok, _ := s.RawID(); ok {

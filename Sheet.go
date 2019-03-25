@@ -43,6 +43,11 @@ func (sh *Sheet) clearSheet() {
 	sh.file.NewSheet(name)
 }
 
+// Name returns the name of sheet
+func (sh *Sheet) Name() string {
+	return sh.name
+}
+
 // GetWriteAccess populates draft with current content fo sheet and grants write access
 func (sh *Sheet) GetWriteAccess() {
 	if sh.writeAccess {
@@ -54,7 +59,7 @@ func (sh *Sheet) GetWriteAccess() {
 	for i, row := range rows {
 		newCellRow := []Cell{}
 		for j, str := range row {
-			styleID, _ := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.ToString())
+			styleID, _ := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.String())
 			newCellRow = append(newCellRow, Cell{Value: str, Style: RawID(styleID)})
 		}
 		sh.draft = append(sh.draft, newCellRow)
@@ -200,7 +205,7 @@ func (sh *Sheet) AddEmptyRow() {
 // GetValue returns the Value from the cell at coord
 func (sh *Sheet) GetValue(coord Coordinates) interface{} {
 	if !sh.writeAccess {
-		value, err := sh.file.GetCellValue(sh.name, coord.ToString())
+		value, err := sh.file.GetCellValue(sh.name, coord.String())
 		if err != nil {
 			fmt.Println(err)
 		}

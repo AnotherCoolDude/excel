@@ -70,14 +70,14 @@ func (excel *Excel) Save(path string) {
 				}
 				currentCoords.Row = i + 1
 				currentCoords.Column = j + 1
-				excel.file.SetCellValue(sheet.name, currentCoords.ToString(), cell.Value)
+				excel.file.SetCellValue(sheet.name, currentCoords.String(), cell.Value)
 
 				if isRaw, id := cell.Style.RawID(); isRaw {
-					excel.file.SetCellStyle(sheet.name, currentCoords.ToString(), currentCoords.ToString(), id)
+					excel.file.SetCellStyle(sheet.name, currentCoords.String(), currentCoords.String(), id)
 					continue
 				}
 
-				styleString := cell.Style.toString()
+				styleString := cell.Style.string()
 				if styleString == "" {
 					continue
 				}
@@ -86,7 +86,7 @@ func (excel *Excel) Save(path string) {
 					fmt.Println(styleString)
 					fmt.Println(err)
 				}
-				excel.file.SetCellStyle(sheet.name, currentCoords.ToString(), currentCoords.ToString(), st)
+				excel.file.SetCellStyle(sheet.name, currentCoords.String(), currentCoords.String(), st)
 			}
 		}
 		if sheet.freezeHeader {
