@@ -48,11 +48,11 @@ func (sh *Sheet) GetWriteAccess() {
 		return
 	}
 	sh.draft = [][]Cell{}
-	rows := sh.file.GetRows(sh.name)
+	rows, _ := sh.file.GetRows(sh.name)
 	for i, row := range rows {
 		newCellRow := []Cell{}
 		for j, str := range row {
-			styleID := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.ToString())
+			styleID, _ := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.ToString())
 			newCellRow = append(newCellRow, Cell{Value: str, Style: RawID(styleID)})
 		}
 		sh.draft = append(sh.draft, newCellRow)
@@ -92,11 +92,12 @@ func (sh *Sheet) ExtractColumnsByName(columnNames []string) [][]string {
 // ExtractColumns returns columns from sheet
 func (sh *Sheet) ExtractColumns(columns []string) [][]string {
 	numeric := []int{}
-	rawData := sh.file.GetRows(sh.name)
+	rawData, _ := sh.file.GetRows(sh.name)
 	filteredData := [][]string{}
 
 	for _, c := range columns {
-		numeric = append(numeric, excelize.MustColumnNameToNumber(c))
+		num, _ := excelize.ColumnNameToNumber(c)
+		numeric = append(numeric, num)
 	}
 	for _, row := range rawData {
 		filteredRow := []string{}
@@ -120,7 +121,11 @@ func (sh *Sheet) NextRow() int {
 // CurrentRow returns the current Row
 func (sh *Sheet) CurrentRow() int {
 	if !sh.writeAccess {
-		return len(sh.file.GetRows(sh.name))
+		rows, err := sh.file.GetRows(sh.name)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return len(rows)
 	}
 	return len(sh.draft)
 }
@@ -193,7 +198,11 @@ func (sh *Sheet) AddEmptyRow() {
 // GetValue returns the Value from the cell at coord
 func (sh *Sheet) GetValue(coord Coordinates) interface{} {
 	if !sh.writeAccess {
-		return sh.file.GetCellValue(sh.name, coord.ToString())
+		value, err := sh.file.GetCellValue(sh.name, coord.ToString())
+		if err != nil {
+			fmt.Println(err)
+		}
+		return value
 	}
 	return sh.draft[coord.Column][coord.Row].Value
 }
@@ -221,7 +230,7 @@ func PrintHeader(sh *Sheet, startingRow int) {
 	for k, v := range sheetMap {
 		headerTableData := [][]string{}
 		headerTableData = append(headerTableData, []string{strconv.Itoa(k), v})
-		rows := sh.file.GetRows(v)
+		rows, _ := sh.file.GetRows(v)
 		for index, head := range rows[startingRow] {
 			coordString, err := excelize.CoordinatesToCellName(index, startingRow+1)
 			if err != nil {

@@ -34,7 +34,8 @@ func File(path string, sheetname string) *Excel {
 		eFile, err = excelize.OpenFile(path)
 		sheetMap := eFile.GetSheetMap()
 		for _, name := range sheetMap {
-			header := eFile.GetRows(name)[0]
+			rows, _ := eFile.GetRows(name)
+			header := rows[0]
 			sheets = append(sheets, Sheet{file: eFile, name: name, columns: header, writeAccess: false})
 		}
 		if err != nil {

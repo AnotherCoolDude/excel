@@ -16,5 +16,9 @@ func (c Coordinates) ToString() string {
 		fmt.Printf("Coordinates: %v -> 0 is not allowed, excel starts at 1\n", c)
 		return ""
 	}
-	return excelize.MustCoordinatesToCellName(c.Column, c.Row)
+	str, err := excelize.CoordinatesToCellName(c.Column, c.Row)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return str
 }
