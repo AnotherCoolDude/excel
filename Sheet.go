@@ -11,11 +11,12 @@ import (
 
 // Sheet wraps the sheets of a excel file into a struct
 type Sheet struct {
-	file        *excelize.File
-	name        string
-	columns     []string
-	draft       [][]Cell
-	writeAccess bool
+	file         *excelize.File
+	name         string
+	columns      []string
+	draft        [][]Cell
+	writeAccess  bool
+	freezeHeader bool
 }
 
 // Get/Create Sheets
@@ -32,7 +33,7 @@ func (excel *Excel) Sheet(name string) *Sheet {
 	newSheet := Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, writeAccess: true}
 	excel.file.NewSheet(name)
 	*excel.sheets = append(*excel.sheets, newSheet)
-	return &newSheet
+	return &(*excel.sheets)[len(*excel.sheets)-1]
 }
 
 // ClearSheet clears the content of sheet, but not the draft of sheet
@@ -160,10 +161,6 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 		return
 	}
 
-	if len(sh.columns) == 0 {
-		fmt.Printf("WARNING: Sheet %s has no header column\n", sh.name)
-	}
-
 	newRowIndexes := []int{}
 	for index := range columnCellMap {
 		newRowIndexes = append(newRowIndexes, index)
@@ -214,7 +211,7 @@ func (sh *Sheet) GetValue(coord Coordinates) interface{} {
 
 // FreezeHeader freezes the headerrow
 func (sh *Sheet) FreezeHeader() {
-	sh.file.SetPanes(sh.name, `{"freeze":true,"split":false,"x_split":0,"y_split":1,"top_left_cell":"A34","active_pane":"bottomLeft"}`)
+	sh.freezeHeader = true
 }
 
 // Helper

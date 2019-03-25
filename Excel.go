@@ -59,6 +59,9 @@ func (excel *Excel) Save(path string) {
 		sheet.clearSheet()
 		currentCoords := Coordinates{Row: 0, Column: 0}
 		fmt.Printf("writing to sheet %s\n", sheet.name)
+		if len(sheet.columns) == 0 {
+			fmt.Printf("WARNING: Sheet %s has no header column\n", sheet.name)
+		}
 		for i, row := range sheet.draft {
 			for j, cell := range row {
 				bar.Add(1)
@@ -85,6 +88,9 @@ func (excel *Excel) Save(path string) {
 				}
 				excel.file.SetCellStyle(sheet.name, currentCoords.ToString(), currentCoords.ToString(), st)
 			}
+		}
+		if sheet.freezeHeader {
+			sheet.file.SetPanes(sheet.name, `{"freeze":true,"split":false,"x_split":0,"y_split":1,"top_left_cell":"A34","active_pane":"bottomLeft"}`)
 		}
 		fmt.Println()
 		fmt.Println()
