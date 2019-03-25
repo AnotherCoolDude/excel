@@ -59,9 +59,6 @@ func (excel *Excel) Save(path string) {
 		sheet.clearSheet()
 		currentCoords := Coordinates{Row: 0, Column: 0}
 		fmt.Printf("writing to sheet %s\n", sheet.name)
-		if sheet.name == "Adjustments" {
-			fmt.Println(sheet.draft)
-		}
 		for i, row := range sheet.draft {
 			for j, cell := range row {
 				bar.Add(1)

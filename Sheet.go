@@ -115,12 +115,12 @@ func (sh *Sheet) ExtractColumns(columns []string) [][]string {
 // Modify Sheets
 
 // NextRow returns the next free Row
-func (sh *Sheet) nextRow() int {
-	return sh.currentRow() + 1
+func (sh *Sheet) NextRow() int {
+	return sh.CurrentRow() + 1
 }
 
 // CurrentRow returns the current Row
-func (sh *Sheet) currentRow() int {
+func (sh *Sheet) CurrentRow() int {
 	if !sh.writeAccess {
 		rows, err := sh.file.GetRows(sh.name)
 		if err != nil {
