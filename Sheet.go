@@ -23,14 +23,15 @@ type Sheet struct {
 // Sheet retruns the sheet with the given name or creates a new one
 func (excel *Excel) Sheet(name string) *Sheet {
 	// Sheet exists
-	for _, existingSheet := range *excel.sheets {
+	for i, existingSheet := range *excel.sheets {
 		if existingSheet.name == name {
-			return &existingSheet
+			return &(*excel.sheets)[i]
 		}
 	}
-
+	fmt.Printf("Creating new sheet %s\n", name)
 	newSheet := Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, writeAccess: true}
 	excel.file.NewSheet(name)
+	*excel.sheets = append(*excel.sheets, newSheet)
 	return &newSheet
 }
 
@@ -114,12 +115,12 @@ func (sh *Sheet) ExtractColumns(columns []string) [][]string {
 // Modify Sheets
 
 // NextRow returns the next free Row
-func (sh *Sheet) NextRow() int {
-	return sh.CurrentRow() + 1
+func (sh *Sheet) nextRow() int {
+	return sh.currentRow() + 1
 }
 
 // CurrentRow returns the current Row
-func (sh *Sheet) CurrentRow() int {
+func (sh *Sheet) currentRow() int {
 	if !sh.writeAccess {
 		rows, err := sh.file.GetRows(sh.name)
 		if err != nil {
@@ -136,16 +137,20 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
+
 	headerCells := []Cell{}
 	for _, h := range header {
 		headerCells = append(headerCells, Cell{Value: h, Style: NoStyle()})
 	}
 	if len(sh.draft) == 0 {
+		fmt.Println("Writing Header Column:")
 		sh.draft = append(sh.draft, headerCells)
 	} else {
+		fmt.Println("Replacing Header Column:")
 		sh.draft[0] = headerCells
 	}
 	sh.columns = header
+	fmt.Println(sh.columns)
 }
 
 // AddRow scanns for the next available row and inserts cells at the given indexes provided by the map
