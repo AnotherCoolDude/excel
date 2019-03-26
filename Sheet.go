@@ -202,6 +202,11 @@ func (sh *Sheet) AddEmptyRow() {
 // 	sh.file.SetConditionalFormat(sh.name, coord.ToString(), fmt.Sprintf(`[{"type":"cell","criteria":"<","format":%d,"value":%s}]`, format, compString))
 // }
 
+// CopyRow appends row from sheet to the draft of the calling sheet
+func (sh *Sheet) CopyRow(sheet *Sheet, row int) {
+	sh.draft = append(sh.draft, sheet.draft[row])
+}
+
 // GetValue returns the Value from the cell at coord
 func (sh *Sheet) GetValue(coord Coordinates) interface{} {
 	if !sh.writeAccess {
@@ -212,6 +217,28 @@ func (sh *Sheet) GetValue(coord Coordinates) interface{} {
 		return value
 	}
 	return sh.draft[coord.Column][coord.Row].Value
+}
+
+// GetRow returns row of sheet, row must start at 1
+func (sh *Sheet) GetRow(row int) []Cell {
+	if row < 1 {
+		fmt.Println("row must start at 1")
+		return []Cell{}
+	}
+	if !sh.writeAccess {
+		rows, err := sh.file.GetRows(sh.name)
+		if err != nil {
+			fmt.Println(err)
+		}
+		cells := []Cell{}
+		for i, value := range rows[row] {
+			coords, _ := excelize.CoordinatesToCellName(i, row)
+			styleID, _ := sh.file.GetCellStyle(sh.name, coords)
+			cells = append(cells, Cell{Value: value, Style: RawID(styleID)})
+		}
+		return cells
+	}
+	return sh.draft[row-1]
 }
 
 // FreezeHeader freezes the headerrow
