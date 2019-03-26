@@ -216,7 +216,8 @@ func (sh *Sheet) GetValue(coord Coordinates) interface{} {
 		}
 		return value
 	}
-	return sh.draft[coord.Column][coord.Row].Value
+	fmt.Printf("lenght draft: %d\n", len(sh.draft))
+	return sh.draft[coord.Row-1][coord.Column-1].Value
 }
 
 // GetRow returns row of sheet, row must start at 1
