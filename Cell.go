@@ -23,3 +23,11 @@ func (c *Cell) ChangeStyle(style Style) *Cell {
 	c.Style = style
 	return c
 }
+
+// HasValue returns true, if cell has a value
+func (c *Cell) HasValue() bool {
+	if c.Value == DraftCell || c.Value == StyleCell {
+		return false
+	}
+	return true
+}

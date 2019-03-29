@@ -180,14 +180,14 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 
 	for i := 1; i != maxInt(newRowIndexes)+1; i++ {
 		if val, ok := columnCellMap[i]; ok {
-			val.coordinates = Coordinates{Column: i, Row: len(sh.draft)}
+			val.coordinates = Coordinates{Column: i, Row: len(sh.draft) + 1}
 			str := strings.TrimSpace(fmt.Sprintf("%s", val.Value))
 			if str == "" {
 				val.Value = StyleCell
 			}
 			newRow = append(newRow, val)
 		} else {
-			newRow = append(newRow, Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: i, Row: len(sh.draft)}})
+			newRow = append(newRow, Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: i, Row: len(sh.draft) + 1}})
 		}
 	}
 
@@ -200,7 +200,7 @@ func (sh *Sheet) AddEmptyRow() {
 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	sh.draft = append(sh.draft, []Cell{Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: len(sh.draft)}}})
+	sh.draft = append(sh.draft, []Cell{Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: len(sh.draft) + 1}}})
 }
 
 // AddCondition adds a condition, that fills the cell red if its value is less than comparison
