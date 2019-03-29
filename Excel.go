@@ -11,6 +11,8 @@ import (
 const (
 	// DraftCell is a placeholder for empty cells
 	DraftCell = "DRAFT_CELL"
+	// StyleCell is a placeholder for empty cells with a style
+	StyleCell = "STYLE_CELL"
 )
 
 // Excel wraps the excelize package
@@ -68,6 +70,9 @@ func (excel *Excel) Save(path string) {
 				bar.Add(1)
 				if cell.Value == DraftCell {
 					continue
+				}
+				if cell.Value == StyleCell {
+					cell.Value = " "
 				}
 				currentCoords.Row = i + 1
 				currentCoords.Column = j + 1

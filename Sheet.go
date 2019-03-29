@@ -183,7 +183,7 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 			val.coordinates = Coordinates{Column: i, Row: len(sh.draft)}
 			str := strings.TrimSpace(fmt.Sprintf("%s", val.Value))
 			if str == "" {
-				val.Value = DraftCell
+				val.Value = StyleCell
 			}
 			newRow = append(newRow, val)
 		} else {
