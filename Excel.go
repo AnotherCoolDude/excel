@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	draftCell = "DRAFT_CELL"
+	// DraftCell is a placeholder for empty cells
+	DraftCell = "DRAFT_CELL"
 )
 
 // Excel wraps the excelize package
@@ -65,7 +66,7 @@ func (excel *Excel) Save(path string) {
 		for i, row := range sheet.draft {
 			for j, cell := range row {
 				bar.Add(1)
-				if cell.Value == draftCell {
+				if cell.Value == DraftCell {
 					continue
 				}
 				currentCoords.Row = i + 1

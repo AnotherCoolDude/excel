@@ -48,6 +48,11 @@ func (sh *Sheet) Name() string {
 	return sh.name
 }
 
+// Draft returns a copy of the current draft of sheet
+func (sh *Sheet) Draft() [][]Cell {
+	return sh.draft
+}
+
 // GetWriteAccess populates draft with current content fo sheet and grants write access
 func (sh *Sheet) GetWriteAccess() {
 	if sh.writeAccess {
@@ -145,8 +150,8 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 	}
 
 	headerCells := []Cell{}
-	for _, h := range header {
-		headerCells = append(headerCells, Cell{Value: h, Style: NoStyle()})
+	for i, h := range header {
+		headerCells = append(headerCells, Cell{Value: h, Style: NoStyle(), coordinates: Coordinates{Column: i + 1, Row: 1}})
 	}
 	if len(sh.draft) == 0 {
 		fmt.Println("Writing Header Column:")
@@ -174,9 +179,10 @@ func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 
 	for i := 1; i != maxInt(newRowIndexes)+1; i++ {
 		if val, ok := columnCellMap[i]; ok {
+			val.coordinates = Coordinates{Column: i, Row: len(sh.draft)}
 			newRow = append(newRow, val)
 		} else {
-			newRow = append(newRow, Cell{Value: draftCell, Style: NoStyle()})
+			newRow = append(newRow, Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: i, Row: len(sh.draft)}})
 		}
 	}
 
@@ -189,7 +195,7 @@ func (sh *Sheet) AddEmptyRow() {
 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	sh.draft = append(sh.draft, []Cell{Cell{Value: " ", Style: NoStyle()}})
+	sh.draft = append(sh.draft, []Cell{Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: len(sh.draft)}}})
 }
 
 // AddCondition adds a condition, that fills the cell red if its value is less than comparison
