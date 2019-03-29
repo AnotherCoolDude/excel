@@ -16,3 +16,9 @@ func (c *Cell) Coordinates() (Coordinates, error) {
 	}
 	return c.coordinates, nil
 }
+
+// ChangeStyle changes Style of cell
+func (c *Cell) ChangeStyle(style Style) *Cell {
+	c.Style = style
+	return c
+}
