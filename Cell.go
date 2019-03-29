@@ -1,6 +1,6 @@
 package excel
 
-import "errors"
+import "fmt"
 
 // Cell wraps a cell's value and its style in a struct
 type Cell struct {
@@ -10,11 +10,12 @@ type Cell struct {
 }
 
 // Coordinates returns the coordinates associated with cell
-func (c *Cell) Coordinates() (Coordinates, error) {
+func (c *Cell) Coordinates() Coordinates {
 	if c.coordinates == (Coordinates{}) {
-		return Coordinates{}, errors.New("Coordinates for Cell are not yet initialized, returning empty stuct")
+		fmt.Println("Coordinates for Cell are not yet initialized, returning empty stuct")
+		return Coordinates{}
 	}
-	return c.coordinates, nil
+	return c.coordinates
 }
 
 // ChangeStyle changes Style of cell
