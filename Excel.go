@@ -22,11 +22,11 @@ type Excel struct {
 }
 
 // File opens/creates a Excel file. If newly created, names the first sheet after sheetname
-func File(path string, sheetname string) *Excel {
+func File(path string, sheetname string, override bool) *Excel {
 	var eFile *excelize.File
 	var sheets []Sheet
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Println("file not existing, creating new...")
+	if _, err := os.Stat(path); os.IsNotExist(err) || override {
+		fmt.Printf("creating new file at path\n%s\n", path)
 		eFile = excelize.NewFile()
 		newExcel := Excel{file: eFile, sheets: &[]Sheet{}}
 		newExcel.Sheet(sheetname)

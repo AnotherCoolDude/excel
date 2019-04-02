@@ -10,6 +10,24 @@ type Formula struct {
 	sheet  string
 }
 
+// FormulaFromRange returns a Formula with all coordinates from start to end in sheet
+func FormulaFromRange(start, end Coordinates, sheet string) *Formula {
+	coords := []Coordinates{}
+
+	if start.Row > end.Row || start.Column > end.Column {
+		fmt.Printf("Start coordinates ahead of end coordinates in range %s:%s\n", start.String(), end.String())
+		return &Formula{Coords: &coords, sheet: sheet}
+	}
+
+	for sR := start.Row; sR < end.Row; sR++ {
+		for sC := start.Column; sC < end.Column; sC++ {
+			coords = append(coords, Coordinates{Column: sC, Row: sR})
+		}
+	}
+	coords = append(coords, end)
+	return &Formula{Coords: &coords, sheet: sheet}
+}
+
 // Reference makes the formula reference to another sheet
 func (formula *Formula) Reference(sheet string) *Formula {
 	formula.sheet = sheet
