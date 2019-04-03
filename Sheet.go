@@ -8,6 +8,15 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 )
 
+// Column represents a column
+type Column int
+
+// Row represents a Row, in which each column has a cell
+type Row map[column]Cell
+
+// Draft represents the draft of the sheet
+type Draft []row
+
 // Structs
 
 // Sheet wraps the sheets of a excel file into a struct
