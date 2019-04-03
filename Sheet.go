@@ -12,10 +12,10 @@ import (
 type Column int
 
 // Row represents a Row, in which each column has a cell
-type Row map[column]Cell
+type Row map[Column]Cell
 
 // Draft represents the draft of the sheet
-type Draft []row
+type Draft []Row
 
 // Structs
 
@@ -23,8 +23,8 @@ type Draft []row
 type Sheet struct {
 	file         *excelize.File
 	name         string
-	columns      []string
-	draft        [][]Cell
+	headerTitle  []string
+	draft        Draft
 	writeAccess  bool
 	freezeHeader bool
 }
@@ -59,8 +59,26 @@ func (sh *Sheet) Name() string {
 }
 
 // Draft returns a copy of the current draft of sheet
-func (sh *Sheet) Draft() [][]Cell {
+func (sh *Sheet) Draft() Draft {
 	return sh.draft
+}
+
+// draft functions
+
+func (draft *Draft) add(row Row) {
+	*draft = append(*draft, row)
+}
+
+func (draft *Draft) lenght() int {
+	return len(*draft)
+}
+
+func (draft *Draft) replace(index int, row Row) {
+	if index == 0 {
+		fmt.Println("draft index starting at 1, incrementing index")
+		index++
+	}
+	(*draft)[index] = row
 }
 
 // GetWriteAccess populates draft with current content fo sheet and grants write access
@@ -69,18 +87,18 @@ func (sh *Sheet) GetWriteAccess() {
 		fmt.Printf("write access for sheet %s already granted\n", sh.name)
 		return
 	}
-	sh.draft = [][]Cell{}
+	sh.draft = Draft{}
 	rows, _ := sh.file.GetRows(sh.name)
 	for i, row := range rows {
-		newCellRow := []Cell{}
+		newRow := Row{}
 		for j, str := range row {
 			styleID, _ := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.String())
-			newCellRow = append(newCellRow, Cell{Value: str, Style: RawID(styleID)})
+			newRow[Column(j+1)] = Cell{Value: str, Style: RawID(styleID)}
 		}
-		sh.draft = append(sh.draft, newCellRow)
+		sh.draft.add(newRow)
 	}
 	for _, cell := range sh.draft[0] {
-		sh.columns = append(sh.columns, fmt.Sprintf("%s", cell.Value))
+		sh.headerTitle = append(sh.headerTitle, fmt.Sprintf("%s", cell.Value))
 	}
 	sh.writeAccess = true
 }
@@ -92,16 +110,16 @@ func (excel *Excel) FirstSheet() *Sheet {
 }
 
 // ExtractColumnsByName extracts columns by there names from sheet
-func (sh *Sheet) ExtractColumnsByName(columnNames []string) [][]string {
+func (sh *Sheet) ExtractColumnsByName(columnTitles []string) [][]string {
 	columns := []string{}
 	columnMap := map[string]int{}
-	for i, name := range sh.columns {
-		if containsString(columnNames, name) {
-			columnMap[name] = i + 1
+	for i, title := range sh.headerTitle {
+		if containsString(columnTitles, title) {
+			columnMap[title] = i + 1
 		}
 	}
-	for _, columnName := range columnNames {
-		columnstring, err := excelize.ColumnNumberToName(columnMap[columnName])
+	for _, title := range columnTitles {
+		columnstring, err := excelize.ColumnNumberToName(columnMap[title])
 		if err != nil {
 			fmt.Printf("error converting index to columnname: %s\n", err)
 			continue
@@ -159,19 +177,19 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 		return
 	}
 
-	headerCells := []Cell{}
+	headerRow := Row{}
 	for i, h := range header {
-		headerCells = append(headerCells, Cell{Value: h, Style: NoStyle(), coordinates: Coordinates{Column: i + 1, Row: 1}})
+		headerRow[Column(i+1)] = Cell{Value: h, Style: NoStyle()}
 	}
 	if len(sh.draft) == 0 {
 		fmt.Println("Writing Header Column:")
-		sh.draft = append(sh.draft, headerCells)
+		sh.draft.add(headerRow)
 	} else {
 		fmt.Println("Replacing Header Column:")
-		sh.draft[0] = headerCells
+		sh.draft.replace(0, headerRow)
 	}
-	sh.columns = header
-	fmt.Println(sh.columns)
+	sh.headerTitle = header
+	fmt.Println(sh.headerTitle)
 }
 
 // AddRow scanns for the next available row and inserts cells at the given indexes provided by the map
