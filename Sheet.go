@@ -3,7 +3,6 @@ package excel
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 )
@@ -11,11 +10,63 @@ import (
 // Column represents a column
 type Column int
 
+func (c Column) int() int {
+	return int(c)
+}
+
+func (c Column) string() string {
+	str, _ := excelize.ColumnNumberToName(c.int())
+	return str
+}
+
 // Row represents a Row, in which each column has a cell
 type Row map[Column]Cell
 
+func (row *Row) AddStyle(Style) {
+	maxCol := row.maxColumn()
+	for i := 1, i < maxCol, i++ {
+		if cell
+	}
+}
+
+func (row *Row) maxColumn() int {
+	highest := 0
+	for c := range *row {
+		if c.int() > highest {
+			highest = c.int()
+		}
+	}
+	return highest
+}
+
 // Draft represents the draft of the sheet
 type Draft []Row
+
+// draft functions
+
+func (draft *Draft) add(row Row) {
+	*draft = append(*draft, row)
+}
+
+func (draft *Draft) lenght() int {
+	return len(*draft)
+}
+
+func (draft *Draft) replace(index int, row Row) {
+	if index == 0 {
+		fmt.Println("draft index starting at 1, incrementing index")
+		index++
+	}
+	(*draft)[index] = row
+}
+
+func (draft *Draft) value(row, column int) string {
+	if row > draft.lenght() {
+		fmt.Printf("row %d out of bounds, draft has only %d rows", row, draft.lenght())
+		return ""
+	}
+	return fmt.Sprintf("%s", (*draft)[row][Column(column)].Value)
+}
 
 // Structs
 
@@ -30,6 +81,11 @@ type Sheet struct {
 }
 
 // Get/Create Sheets
+func newSheet(file *excelize.File, name string) *Sheet {
+	newSheet := Sheet{file: file, name: name, headerTitle: []string{}, draft: Draft{}, writeAccess: true}
+	newSheet.AddEmptyRow()
+	return &newSheet
+}
 
 // Sheet retruns the sheet with the given name or creates a new one
 func (excel *Excel) Sheet(name string) *Sheet {
@@ -40,9 +96,9 @@ func (excel *Excel) Sheet(name string) *Sheet {
 		}
 	}
 	fmt.Printf("Creating new sheet %s\n", name)
-	newSheet := Sheet{file: excel.file, name: name, headerTitle: []string{}, draft: Draft{}, writeAccess: true}
+	newSheet := newSheet(excel.file, name)
 	excel.file.NewSheet(name)
-	*excel.sheets = append(*excel.sheets, newSheet)
+	*excel.sheets = append(*excel.sheets, *newSheet)
 	return &(*excel.sheets)[len(*excel.sheets)-1]
 }
 
@@ -63,32 +119,6 @@ func (sh *Sheet) Draft() Draft {
 	return sh.draft
 }
 
-// draft functions
-
-func (draft *Draft) add(row Row) {
-	*draft = append(*draft, row)
-}
-
-func (draft *Draft) lenght() int {
-	return len(*draft)
-}
-
-func (draft *Draft) replace(index int, row Row) {
-	if index == 0 {
-		fmt.Println("draft index starting at 1, incrementing index")
-		index++
-	}
-	(*draft)[index] = row
-}
-
-func (draft *Draft) value(column, row int) string {
-	if row > draft.lenght() {
-		fmt.Printf("row %d out of bounds, draft has only %d rows", row, draft.lenght())
-		return ""
-	}
-	draft[row][Column(column)]
-}
-
 // GetWriteAccess populates draft with current content fo sheet and grants write access
 func (sh *Sheet) GetWriteAccess() {
 	if sh.writeAccess {
@@ -96,6 +126,7 @@ func (sh *Sheet) GetWriteAccess() {
 		return
 	}
 	sh.draft = Draft{}
+	sh.AddEmptyRow()
 	rows, _ := sh.file.GetRows(sh.name)
 	for i, row := range rows {
 		newRow := Row{}
@@ -105,7 +136,7 @@ func (sh *Sheet) GetWriteAccess() {
 		}
 		sh.draft.add(newRow)
 	}
-	for _, cell := range sh.draft[0] {
+	for _, cell := range sh.draft[1] {
 		sh.headerTitle = append(sh.headerTitle, fmt.Sprintf("%s", cell.Value))
 	}
 	sh.writeAccess = true
@@ -175,7 +206,7 @@ func (sh *Sheet) CurrentRow() int {
 		}
 		return len(rows)
 	}
-	return len(sh.draft)
+	return len(sh.draft) + 1
 }
 
 // AddHeaderColumn adds a header column to sheet
@@ -189,12 +220,12 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 	for i, h := range header {
 		headerRow[Column(i+1)] = Cell{Value: h, Style: NoStyle()}
 	}
-	if len(sh.draft) == 0 {
+	if len(sh.draft) == 1 {
 		fmt.Println("Writing Header Column:")
 		sh.draft.add(headerRow)
 	} else {
 		fmt.Println("Replacing Header Column:")
-		sh.draft.replace(0, headerRow)
+		sh.draft.replace(1, headerRow)
 	}
 	sh.headerTitle = header
 	fmt.Println(sh.headerTitle)
@@ -258,38 +289,42 @@ func (sh *Sheet) CopyRow(sheet *Sheet, row int) {
 }
 
 // GetValue returns the Value from the cell at coord
-func (sh *Sheet) GetValue(coord Coordinates) interface{} {
-	if !sh.writeAccess {
-		value, err := sh.file.GetCellValue(sh.name, coord.String())
-		if err != nil {
-			fmt.Println(err)
-		}
-		return value
-	}
-	fmt.Printf("lenght draft: %d\n", len(sh.draft))
-	return sh.draft[coord.Row-1][coord.Column-1].Value
+func (sh *Sheet) GetValue(row, column int) string {
+	return sh.draft.value(row, column)
 }
 
+// func (sh *Sheet) GetValue(coord Coordinates) interface{} {
+// 	if !sh.writeAccess {
+// 		value, err := sh.file.GetCellValue(sh.name, coord.String())
+// 		if err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		return value
+// 	}
+// 	fmt.Printf("lenght draft: %d\n", len(sh.draft))
+// 	return sh.draft[coord.Row-1][coord.Column-1].Value
+// }
+
 // GetRow returns row of sheet, row must start at 1
-func (sh *Sheet) GetRow(row int) []Cell {
+func (sh *Sheet) GetRow(row int) Row {
+	newRow := Row{}
 	if row < 1 {
 		fmt.Println("row must start at 1")
-		return []Cell{}
+		return newRow
 	}
 	if !sh.writeAccess {
 		rows, err := sh.file.GetRows(sh.name)
 		if err != nil {
 			fmt.Println(err)
 		}
-		cells := []Cell{}
-		for i, value := range rows[row] {
+		for i, value := range rows[row-1] {
 			coords, _ := excelize.CoordinatesToCellName(i, row)
 			styleID, _ := sh.file.GetCellStyle(sh.name, coords)
-			cells = append(cells, Cell{Value: value, Style: RawID(styleID)})
+			newRow[Column(i+1)] = Cell{Value: value, Style: RawID(styleID)}
 		}
-		return cells
+		return newRow
 	}
-	return sh.draft[row-1]
+	return sh.draft[row]
 }
 
 // FreezeHeader freezes the headerrow
@@ -331,7 +366,7 @@ func PrintHeader(sh *Sheet, startingRow int) {
 
 // HeaderColumns returns the header columns of sheet
 func (sh *Sheet) HeaderColumns() []string {
-	return sh.columns
+	return sh.headerTitle
 }
 
 func containsInt(slice []int, value int) bool {

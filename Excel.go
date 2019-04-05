@@ -39,7 +39,7 @@ func File(path string, sheetname string, override bool) *Excel {
 	for _, name := range sheetMap {
 		rows, _ := eFile.GetRows(name)
 		header := rows[0]
-		sheets = append(sheets, Sheet{file: eFile, name: name, columns: header, writeAccess: false})
+		sheets = append(sheets, Sheet{file: eFile, name: name, headerTitle: header, writeAccess: false})
 	}
 	if err != nil {
 		fmt.Printf("couldn't open file at path\n%s\nerr: %s", path, err)
@@ -58,11 +58,11 @@ func (excel *Excel) Save(path string) {
 			fmt.Printf("WARNING: didn't save. No write access for sheet %s\n", sheet.name)
 			continue
 		}
-		bar := progressbar.New(len(sheet.draft))
+		bar := progressbar.New(sheet.draft.lenght())
 		sheet.clearSheet()
 		currentCoords := Coordinates{Row: 0, Column: 0}
 		fmt.Printf("writing to sheet %s\n", sheet.name)
-		if len(sheet.columns) == 0 {
+		if len(sheet.headerTitle) == 0 {
 			fmt.Printf("WARNING: Sheet %s has no header column\n", sheet.name)
 		}
 		for i, row := range sheet.draft {
