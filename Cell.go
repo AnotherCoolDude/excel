@@ -6,6 +6,7 @@ import "fmt"
 type Cell struct {
 	Value       interface{}
 	Style       Style
+	id          string
 	coordinates Coordinates
 }
 
@@ -16,6 +17,26 @@ func (c *Cell) Coordinates() Coordinates {
 		return Coordinates{}
 	}
 	return c.coordinates
+}
+
+// SetID adds an id to Cell
+func (c *Cell) SetID(value string) {
+	c.id = value
+}
+
+// ID returns the id of cell
+func (c *Cell) ID() string {
+	return c.id
+}
+
+// NewCell returns a new Cell with no specific style
+func NewCell(value string) *Cell {
+	return &Cell{Value: value, Style: NoStyle()}
+}
+
+// NewEuroCell returns a new Cell with Euro formatting
+func NewEuroCell(value string) *Cell {
+	return NewCell(value).ChangeStyle(EuroStyle())
 }
 
 // ChangeStyle changes Style of cell

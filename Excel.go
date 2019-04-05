@@ -60,12 +60,15 @@ func (excel *Excel) Save(path string) {
 		}
 		bar := progressbar.New(sheet.draft.lenght())
 		sheet.clearSheet()
-		currentCoords := Coordinates{Row: 0, Column: 0}
+		currentCoords := Coordinates{Row: 1, Column: 1}
 		fmt.Printf("writing to sheet %s\n", sheet.name)
 		if len(sheet.headerTitle) == 0 {
 			fmt.Printf("WARNING: Sheet %s has no header column\n", sheet.name)
 		}
 		for i, row := range sheet.draft {
+			if i == 0 {
+				continue
+			}
 			for j, cell := range row {
 				bar.Add(1)
 				if cell.Value == DraftCell {
@@ -74,8 +77,8 @@ func (excel *Excel) Save(path string) {
 				if cell.Value == StyleCell {
 					cell.Value = " "
 				}
-				currentCoords.Row = i + 1
-				currentCoords.Column = j + 1
+				currentCoords.Row = i
+				currentCoords.Column = j.int()
 				excel.file.SetCellValue(sheet.name, currentCoords.String(), cell.Value)
 
 				if isRaw, id := cell.Style.RawID(); isRaw {

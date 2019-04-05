@@ -20,12 +20,18 @@ func (c Column) string() string {
 }
 
 // Row represents a Row, in which each column has a cell
-type Row map[Column]Cell
+type Row map[Column]*Cell
 
-func (row *Row) AddStyle(Style) {
+// AddStyle adds a style to row
+func (row *Row) AddStyle(style Style) {
 	maxCol := row.maxColumn()
-	for i := 1, i < maxCol, i++ {
-		if cell
+	for i := 1; i < maxCol+1; i++ {
+		if cell, ok := (*row)[Column(i)]; ok {
+			cell.Style = style
+			//(*row)[Column(i)].Style = style
+		} else {
+			(*row)[Column(i)] = &Cell{Value: StyleCell, Style: style}
+		}
 	}
 }
 
@@ -66,6 +72,23 @@ func (draft *Draft) value(row, column int) string {
 		return ""
 	}
 	return fmt.Sprintf("%s", (*draft)[row][Column(column)].Value)
+}
+
+// CellsWithID returns a copy of all Cells with ID id
+func (draft *Draft) CellsWithID(id string) []Cell {
+	cells := []Cell{}
+	for i, row := range *draft {
+		for col, cell := range row {
+			if cell.ID() != id {
+				continue
+			}
+			if cell.coordinates == (Coordinates{}) {
+				cell.coordinates = Coordinates{Column: col.int(), Row: i}
+			}
+			cells = append(cells, *cell)
+		}
+	}
+	return cells
 }
 
 // Structs
@@ -132,7 +155,7 @@ func (sh *Sheet) GetWriteAccess() {
 		newRow := Row{}
 		for j, str := range row {
 			styleID, _ := sh.file.GetCellStyle(sh.name, Coordinates{Row: i + 1, Column: j + 1}.String())
-			newRow[Column(j+1)] = Cell{Value: str, Style: RawID(styleID)}
+			newRow[Column(j+1)] = &Cell{Value: str, Style: RawID(styleID)}
 		}
 		sh.draft.add(newRow)
 	}
@@ -218,7 +241,7 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 
 	headerRow := Row{}
 	for i, h := range header {
-		headerRow[Column(i+1)] = Cell{Value: h, Style: NoStyle()}
+		headerRow[Column(i+1)] = &Cell{Value: h, Style: NoStyle()}
 	}
 	if len(sh.draft) == 1 {
 		fmt.Println("Writing Header Column:")
@@ -270,7 +293,7 @@ func (sh *Sheet) AddEmptyRow() {
 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	sh.draft.add(Row{Column(1): Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: sh.draft.lenght() + 1}}})
+	sh.draft.add(Row{Column(1): &Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: sh.draft.lenght() + 1}}})
 }
 
 // AddCondition adds a condition, that fills the cell red if its value is less than comparison
@@ -320,7 +343,7 @@ func (sh *Sheet) GetRow(row int) Row {
 		for i, value := range rows[row-1] {
 			coords, _ := excelize.CoordinatesToCellName(i, row)
 			styleID, _ := sh.file.GetCellStyle(sh.name, coords)
-			newRow[Column(i+1)] = Cell{Value: value, Style: RawID(styleID)}
+			newRow[Column(i+1)] = &Cell{Value: value, Style: RawID(styleID)}
 		}
 		return newRow
 	}
