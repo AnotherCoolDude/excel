@@ -40,7 +40,7 @@ func (excel *Excel) Sheet(name string) *Sheet {
 		}
 	}
 	fmt.Printf("Creating new sheet %s\n", name)
-	newSheet := Sheet{file: excel.file, name: name, columns: []string{}, draft: [][]Cell{}, writeAccess: true}
+	newSheet := Sheet{file: excel.file, name: name, headerTitle: []string{}, draft: Draft{}, writeAccess: true}
 	excel.file.NewSheet(name)
 	*excel.sheets = append(*excel.sheets, newSheet)
 	return &(*excel.sheets)[len(*excel.sheets)-1]
@@ -79,6 +79,14 @@ func (draft *Draft) replace(index int, row Row) {
 		index++
 	}
 	(*draft)[index] = row
+}
+
+func (draft *Draft) value(column, row int) string {
+	if row > draft.lenght() {
+		fmt.Printf("row %d out of bounds, draft has only %d rows", row, draft.lenght())
+		return ""
+	}
+	draft[row][Column(column)]
 }
 
 // GetWriteAccess populates draft with current content fo sheet and grants write access
@@ -193,33 +201,37 @@ func (sh *Sheet) AddHeaderColumn(header []string) {
 }
 
 // AddRow scanns for the next available row and inserts cells at the given indexes provided by the map
-func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
-	if !sh.writeAccess {
-		fmt.Printf("no permission to write to sheet %s\n", sh.name)
-		return
-	}
-
-	newRowIndexes := []int{}
-	for index := range columnCellMap {
-		newRowIndexes = append(newRowIndexes, index)
-	}
-	newRow := []Cell{}
-
-	for i := 1; i != maxInt(newRowIndexes)+1; i++ {
-		if val, ok := columnCellMap[i]; ok {
-			val.coordinates = Coordinates{Column: i, Row: len(sh.draft) + 1}
-			str := strings.TrimSpace(fmt.Sprintf("%s", val.Value))
-			if str == "" {
-				val.Value = StyleCell
-			}
-			newRow = append(newRow, val)
-		} else {
-			newRow = append(newRow, Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: i, Row: len(sh.draft) + 1}})
-		}
-	}
-
-	sh.draft = append(sh.draft, newRow)
+func (sh *Sheet) AddRow(row Row) {
+	sh.draft.add(row)
 }
+
+// func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
+// 	if !sh.writeAccess {
+// 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
+// 		return
+// 	}
+
+// 	newRowIndexes := []int{}
+// 	for index := range columnCellMap {
+// 		newRowIndexes = append(newRowIndexes, index)
+// 	}
+// 	newRow := Row{}
+
+// 	for i := 1; i != maxInt(newRowIndexes)+1; i++ {
+// 		if val, ok := columnCellMap[i]; ok {
+// 			val.coordinates = Coordinates{Column: i, Row: len(sh.draft) + 1}
+// 			str := strings.TrimSpace(fmt.Sprintf("%s", val.Value))
+// 			if str == "" {
+// 				val.Value = StyleCell
+// 			}
+// 			newRow = append(newRow, val)
+// 		} else {
+// 			newRow = append(newRow, Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: i, Row: len(sh.draft) + 1}})
+// 		}
+// 	}
+
+// 	sh.draft.add()
+// }
 
 // AddEmptyRow adds an empty row at index row
 func (sh *Sheet) AddEmptyRow() {
@@ -227,7 +239,7 @@ func (sh *Sheet) AddEmptyRow() {
 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
 		return
 	}
-	sh.draft = append(sh.draft, []Cell{Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: len(sh.draft) + 1}}})
+	sh.draft.add(Row{Column(1): Cell{Value: DraftCell, Style: NoStyle(), coordinates: Coordinates{Column: 1, Row: sh.draft.lenght() + 1}}})
 }
 
 // AddCondition adds a condition, that fills the cell red if its value is less than comparison
