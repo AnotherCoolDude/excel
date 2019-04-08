@@ -36,8 +36,8 @@ func NewCell(value string) *Cell {
 }
 
 // NewEuroCell returns a new Cell with Euro formatting
-func NewEuroCell(value string) *Cell {
-	return NewCell(value).ChangeStyle(EuroStyle())
+func NewEuroCell(value float32) *Cell {
+	return NewCell(fmt.Sprintf("%.2f", value)).ChangeStyle(EuroStyle())
 }
 
 // ChangeStyle changes Style of cell
