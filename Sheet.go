@@ -138,8 +138,8 @@ func (sh *Sheet) Name() string {
 }
 
 // Draft returns a copy of the current draft of sheet
-func (sh *Sheet) Draft() Draft {
-	return sh.draft
+func (sh *Sheet) Draft() *Draft {
+	return &sh.draft
 }
 
 // GetWriteAccess populates draft with current content fo sheet and grants write access
