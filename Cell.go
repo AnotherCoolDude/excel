@@ -21,7 +21,7 @@ func (c *Cell) Coordinates() Coordinates {
 
 // SetID adds an id to Cell
 func (c *Cell) SetID(value string) *Cell {
-	c.id = value
+	(*c).id = value
 	return c
 }
 
@@ -44,7 +44,6 @@ func NewEuroCell(value float32) *Cell {
 func (c *Cell) ChangeStyle(style Style) *Cell {
 	(*c).Style = style
 	return c
-	//return &Cell{Value: c.Value, Style: style}
 }
 
 // HasValue returns true, if cell has a value
