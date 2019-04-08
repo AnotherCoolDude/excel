@@ -20,8 +20,9 @@ func (c *Cell) Coordinates() Coordinates {
 }
 
 // SetID adds an id to Cell
-func (c *Cell) SetID(value string) {
+func (c *Cell) SetID(value string) *Cell {
 	c.id = value
+	return c
 }
 
 // ID returns the id of cell
