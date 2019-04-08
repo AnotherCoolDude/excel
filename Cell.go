@@ -42,7 +42,9 @@ func NewEuroCell(value float32) *Cell {
 
 // ChangeStyle changes Style of cell
 func (c *Cell) ChangeStyle(style Style) *Cell {
-	return &Cell{Value: c.Value, Style: style}
+	(*c).Style = style
+	return c
+	//return &Cell{Value: c.Value, Style: style}
 }
 
 // HasValue returns true, if cell has a value
