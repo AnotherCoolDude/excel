@@ -27,6 +27,9 @@ func (c *Cell) SetID(value string) *Cell {
 
 // ID returns the id of cell
 func (c *Cell) ID() string {
+	if c == nil {
+		return ""
+	}
 	return c.id
 }
 

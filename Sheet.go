@@ -267,6 +267,9 @@ func (sh *Sheet) RowAtIndex(index int) Row {
 
 // LastRowAdded returnes the row, that was last added to sheet
 func (sh *Sheet) LastRowAdded() Row {
+	if len((*sh).draft) <= 1 {
+		return sh.draft[1]
+	}
 	return sh.RowAtIndex(len((*sh).draft) - 1)
 }
 
