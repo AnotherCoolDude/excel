@@ -259,6 +259,17 @@ func (sh *Sheet) AddRow(row Row) {
 	sh.draft.add(row)
 }
 
+// RowAtIndex returns the row at index for sheet
+func (sh *Sheet) RowAtIndex(index int) Row {
+	row := (*sh).draft[index]
+	return row
+}
+
+// LastRowAdded returnes the row, that was last added to sheet
+func (sh *Sheet) LastRowAdded() Row {
+	return sh.RowAtIndex(len((*sh).draft) - 1)
+}
+
 // func (sh *Sheet) AddRow(columnCellMap map[int]Cell) {
 // 	if !sh.writeAccess {
 // 		fmt.Printf("no permission to write to sheet %s\n", sh.name)
