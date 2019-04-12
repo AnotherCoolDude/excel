@@ -35,6 +35,27 @@ func (row *Row) AddStyle(style Style) {
 	}
 }
 
+// AddStyleForColumns adds style to all columns
+func (row *Row) AddStyleForColumns(style Style, columns []int) {
+	for _, col := range columns {
+		if cell, ok := (*row)[Column(col)]; ok {
+			cell.Style = style
+			//(*row)[Column(i)].Style = style
+		} else {
+			(*row)[Column(col)] = &Cell{Value: StyleCell, Style: style}
+		}
+	}
+}
+
+// IDs returns all ids from row
+func (row *Row) IDs() []string {
+	ids := []string{}
+	for _, cell := range *row {
+		ids = append(ids, cell.ID())
+	}
+	return ids
+}
+
 func (row *Row) maxColumn() int {
 	highest := 0
 	for c := range *row {
